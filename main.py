@@ -1,7 +1,7 @@
 import os
+from io import BytesIO
 
-import cv2
-import numpy as np
+from PIL import Image
 
 from image_direction_generator import MAP_LOCATION_DICT, generate_direction
 from pyzbar_modified import pyzbar
@@ -37,14 +37,22 @@ def get_qr_code(message):
     # read image
     url = bot.get_file_url(message.json['photo'][-1]['file_id'])
     response = requests.get(url)
-    arr = np.asarray(bytearray(response.content), dtype=np.uint8)
-    img = cv2.imdecode(arr, -1)  # 'Load it as it is'
+    img = Image.open(BytesIO(response.content))
+    # arr = np.asarray(bytearray(response.content), dtype=np.uint8)
+    # img = cv2.imdecode(arr, -1)  # 'Load it as it is'
 
     # find and decode QR code
     decoded_codes = pyzbar.decode(img)
+    rotation = 0
     if not decoded_codes:
-        bot.send_message(chat_id=message.chat.id, text='No QR code was found. Please try another image.')
-        return
+        new_img = img.rotate(45)
+        rotation = 45
+        # new_img.show()
+
+        decoded_codes = pyzbar.decode(new_img)
+        if not decoded_codes:
+            bot.send_message(chat_id=message.chat.id, text='No QR code was found. Please try another image.')
+            return
 
     if len(decoded_codes) > 1:
         bot.send_message(chat_id=message.chat.id, text='Several QR codes were found. '
@@ -57,7 +65,7 @@ def get_qr_code(message):
                                                        'Please make sure the code is in the image.')
         return
 
-    orientation_degrees = get_angle(decoded_qr_code) * 180 / pi
+    orientation_degrees = get_angle(decoded_qr_code) * 180 / pi + rotation
 
     map_location = MAP_LOCATION_DICT[int(decoded_qr_code.data)]
     new_direction = generate_direction(map_location, orientation_degrees)

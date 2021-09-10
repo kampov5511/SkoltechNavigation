@@ -45,3 +45,7 @@ def generate_direction(map_path, angle):
     map.save(image_bytes, format='JPEG')
     image_bytes.seek(0)
     return image_bytes
+
+
+def rotate(image):
+    image.rotate()
