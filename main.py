@@ -22,14 +22,16 @@ bot = telebot.TeleBot(os.environ.get('TELEGRAM_BOT_KEY'), parse_mode=None)
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
+    return
+    """ Welcoming message
     bot.send_sticker(chat_id=message.chat.id,
                      data='CAACAgIAAxkBAAEC4dhhOy88-VPaB1GkzHAhsnsw4GYwzQADAQACsJjjAxT0jjvVJ8VKIAQ')
-
+    """
 
 @bot.message_handler(func=lambda m: True)
 def echo_all(message):
     bot.reply_to(message, message.text)
-    bot.send_message(chat_id=message.chat.id, text='I am sorry, I do not support this yet... \nAlso your mom is gay')
+    bot.send_message(chat_id=message.chat.id, text='I am sorry, I do not support this yet...')
 
 
 @bot.message_handler(func=lambda m: True, content_types=['photo'])
@@ -54,12 +56,15 @@ def get_qr_code(message):
             bot.send_message(chat_id=message.chat.id, text='No QR code was found. Please try another image.')
             return
 
+    """ Check that one qr code
     if len(decoded_codes) > 1:
         bot.send_message(chat_id=message.chat.id, text='Several QR codes were found. '
                                                        'Please make sure only one code is in the image.')
         return
+    """
 
-    decoded_qr_code = decoded_codes.pop()
+    decoded_qr_code = max(decoded_codes, key=lambda x: x.polygon[0].y)
+
     if not decoded_qr_code.data.isdigit():
         bot.send_message(chat_id=message.chat.id, text='Wrong QR code supplied. '
                                                        'Please make sure the code is in the image.')
