@@ -9,7 +9,7 @@ init_graph = {'1': {'2':1,'10':1}, '2': {'1':1,'3':1}, '3': {'2':1,'4':1}, '4': 
         '10': {'1':1,'9':1,'11':1}, '11': {'10':1,'12':1}, '12': {'11':1,'13':1},
         '13': {'12':1,'14':1}, '14': {'13':1,'15':1}, '15': {'6':1,'14':1}}
 
-def search(source, target, graph, costs, parents):
+def _search(source, target, graph, costs, parents):
     
     nextNode = source
     
@@ -31,7 +31,7 @@ def search(source, target, graph, costs, parents):
         
     return parents
 
-def backpedal(source, target, searchResult):
+def _backpedal(source, target, searchResult):
     
     node = target
     
@@ -61,8 +61,8 @@ def find_route(source, destination):
 
     parents = {}
 
-    result = search(source, destination, graph, costs, parents)
+    result = _search(source, destination, graph, costs, parents)
 
-    return backpedal(source, destination, result)
+    return _backpedal(source, destination, result)
 
 
