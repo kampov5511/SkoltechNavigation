@@ -5,7 +5,6 @@ ARROW_PATH = 'maps/arrow_blue_trans.tif'
 MAP_PATH = 'maps/new_map.jpg'
 
 def generate_map(route, angle):
-    angle *= -1
     arrow = Image.open(ARROW_PATH)
     arrow = arrow.convert('RGBA')
     arrow_w, arrow_h = arrow.size

@@ -77,7 +77,7 @@ def get_qr_code(message):
     destination = 15 # Change it with tg-bot state
     source = int(decoded_qr_code.data)
     route = find_route(source, destination)
-    generated_map = generate_map(route, orientation_degrees)
+    generated_map = generate_map(route, -1 * orientation_degrees)
 
     bot.send_photo(chat_id=message.chat.id, photo=generated_map,
                    caption=f'')
