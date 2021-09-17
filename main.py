@@ -34,7 +34,7 @@ def send_destination_choices(chat_id):
 def send_welcome(message):
     chat_id = message.chat.id
     if session.query(User.id).filter_by(id=message.from_user.id).first() is not None:
-        session.query(User).filter_by(id=message.from_user.id).update({'state': None})
+        session.query(User).filter_by(id=message.from_user.id).update({'state': None, 'destination': None})
     else:
         user = User(id=message.from_user.id, chat_id=chat_id, state=None)
         session.add(user)
@@ -66,6 +66,10 @@ def handle_images(msg):
 
 
 def get_qr(img_url, user_id, chat_id):
+    if session.query(User.destination).filter_by(id=user_id, chat_id=chat_id).first()[0] is None:
+        bot.send_message(chat_id=chat_id, text='The destination is not set!')
+        return
+
     response = requests.get(img_url)
     img = Image.open(BytesIO(response.content))
 
