@@ -4,6 +4,7 @@ from io import BytesIO
 from PIL import Image
 
 from image_direction_generator import MAP_LOCATION_DICT, generate_direction
+from find_route import find_route
 from pyzbar_modified import pyzbar
 import requests
 import telebot
@@ -71,6 +72,10 @@ def get_qr_code(message):
         return
 
     orientation_degrees = get_angle(decoded_qr_code) * 180 / pi + rotation
+
+    destination = 15 # Change it with tg-bot state
+    source = int(decoded_qr_code.data)
+    route = find_route(source, destination)
 
     map_location = MAP_LOCATION_DICT[int(decoded_qr_code.data)]
     new_direction = generate_direction(map_location, orientation_degrees)
