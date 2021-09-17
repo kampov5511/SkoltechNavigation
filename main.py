@@ -14,6 +14,10 @@ import telebot
 
 from math import atan2, pi
 
+PRODUCT_MAP = {'\U0001F34C':1,'\U0001F34D':2, '\U0001F34E':3, '\U0001F352':4, '\U0001F37B':5,
+      '\U0001F4A3':6,'\U0001F52B':7, '\U0001F51E':8, '\U0001F344':9, '\U0001F334':10, '\U0001F354':11,'\U0001F36B':12}
+PRODUCT_NAMES = list(PRODUCT_MAP.keys())
+SHELF_MAP = {1:2,2:3,3:4,4:7,5:8,6:9,7:9,8:8,9:7,10:14,11:13,12:12}
 
 def get_angle(qrcode):
     poly = qrcode.polygon
@@ -26,7 +30,7 @@ bot = telebot.TeleBot(os.environ.get('TELEGRAM_BOT_KEY'), parse_mode=None)
 
 def send_destination_choices(chat_id):
     markup = types.ReplyKeyboardMarkup(row_width=3)
-    markup.add(*[types.KeyboardButton(str(i)) for i in range(1, 13)])
+    markup.add(*[types.KeyboardButton(PRODUCT_NAMES[i]) for i in range(0, 12)])
     bot.send_message(chat_id=chat_id, text="Choose destination:", reply_markup=markup)
 
 
@@ -42,22 +46,14 @@ def send_welcome(message):
     send_destination_choices(chat_id)
 
 
-@bot.message_handler(func=lambda msg: msg.text.isdigit())
+@bot.message_handler(func=lambda m: True)
 def handle_destination(msg):
-    location = int(msg.text)
-    if 0 > location >= 12:
+    if not msg.text in PRODUCT_NAMES:
         bot.send_message(chat_id=msg.chat.id, text='Location is not supported yet!')
         return
-    session.query(User).filter_by(chat_id=msg.chat.id).update({'destination': location})
+    session.query(User).filter_by(chat_id=msg.chat.id).update({'destination': PRODUCT_MAP[msg.text]})
     session.commit()
     bot.send_message(chat_id=msg.chat.id, text='Scan your current location')
-
-
-@bot.message_handler(func=lambda m: True)
-def echo_all(message):
-    bot.reply_to(message, message.text)
-    bot.send_message(chat_id=message.chat.id, text='I am sorry, I do not support this yet...')
-
 
 @bot.message_handler(func=lambda m: True, content_types=['photo'])
 def handle_images(msg):
@@ -94,10 +90,11 @@ def get_qr(img_url, user_id, chat_id):
 
     orientation_degrees = get_angle(decoded_qr_code) * 180 / pi + rotation
 
-    destination = session.query(User.destination).filter_by(id=user_id, chat_id=chat_id).first()[0]
+    desired_product = int(session.query(User.destination).filter_by(id=user_id, chat_id=chat_id).first()[0])
+    destination = SHELF_MAP[desired_product]
     source = int(decoded_qr_code.data)
     route = find_route(source, destination)
-    generated_map = generate_map(route, -1 * orientation_degrees)
+    generated_map = generate_map(route, orientation_degrees, desired_product)
 
     # todo pass the number of new current location to user
     new_location_state = 3  # todo pass the correct value
