@@ -62,7 +62,8 @@ def handle_images(msg):
 
 
 def get_qr(img_url, user_id, chat_id):
-    if session.query(User.destination).filter_by(id=user_id, chat_id=chat_id).first()[0] is None:
+    destination = session.query(User.destination).filter_by(id=user_id, chat_id=chat_id).first()
+    if destination is None or destination[0] is None:
         bot.send_message(chat_id=chat_id, text='The destination is not set!')
         return
 
