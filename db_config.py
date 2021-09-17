@@ -5,7 +5,7 @@ from sqlalchemy.pool import NullPool
 
 Base = declarative_base()
 
-engine = create_engine('sqlite:///nazi.db', poolclass=NullPool)
+engine = create_engine('sqlite:///nazi.db?check_same_thread=False', poolclass=NullPool)
 
 
 class User(Base):
