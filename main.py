@@ -84,7 +84,9 @@ def get_qr(img_url, user_id, chat_id):
 
     decoded_qr_code = max(decoded_codes, key=lambda x: x.polygon[0].y)
 
-    if not decoded_qr_code.data.isdigit():
+    source = int(decoded_qr_code.data)
+
+    if not source in range(1,16):
         bot.send_message(chat_id=chat_id, text='Wrong QR code supplied. '
                                                        'Please make sure the code is in the image.')
         return
@@ -93,7 +95,6 @@ def get_qr(img_url, user_id, chat_id):
 
     desired_product = int(session.query(User.destination).filter_by(id=user_id, chat_id=chat_id).first()[0])
     destination = SHELF_MAP[desired_product]
-    source = int(decoded_qr_code.data)
     route = find_route(source, destination)
     generated_map = generate_map(route, orientation_degrees, desired_product)
 
