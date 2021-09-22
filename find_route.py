@@ -1,9 +1,11 @@
 from numpy import inf
 import copy
 
+# add qr code numbers here
 init_costs = {'1': inf, '2': inf, '3': inf, '4': inf, '5': inf, '6': inf, '7': inf, '8': inf, '9': inf,
             '10': inf, '11': inf, '12': inf, '13': inf, '14': inf, '15': inf}
 
+# qr code number : {neighbour : weight, neighbour : weight}
 init_graph = {'1': {'2':1,'10':1}, '2': {'1':1,'3':1}, '3': {'2':1,'4':1}, '4': {'3':1,'5':1}, '5': {'4':1,'6':1},
         '6': {'5':1,'7':1,'15':1}, '7': {'6':1,'8':1}, '8': {'7':1,'9':1}, '9': {'8':1,'10':1},
         '10': {'1':1,'9':1,'11':1}, '11': {'10':1,'12':1}, '12': {'11':1,'13':1},

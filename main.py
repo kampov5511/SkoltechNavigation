@@ -14,10 +14,13 @@ import telebot
 
 from math import atan2, pi
 
-PRODUCT_MAP = {'\U0001F34C':1,'\U0001F34D':2, '\U0001F34E':3, '\U0001F352':4, '\U0001F37B':5,
+# button name : point number
+PRODUCT_MAP = {'Bantik':1,'India':2, '\U0001F34E':3, '\U0001F352':4, '\U0001F37B':5,
       '\U0001F4A3':6,'\U0001F52B':7, '\U0001F51E':8, '\U0001F344':9, '\U0001F334':10, '\U0001F354':11,'\U0001F36B':12}
-PRODUCT_NAMES = list(PRODUCT_MAP.keys())
+# point number : qr code number
 SHELF_MAP = {1:2,2:3,3:4,4:7,5:8,6:9,7:9,8:8,9:7,10:14,11:13,12:12}
+
+PRODUCT_NAMES = list(PRODUCT_MAP.keys())
 
 def get_angle(qrcode):
     poly = qrcode.polygon
