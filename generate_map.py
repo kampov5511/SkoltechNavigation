@@ -1,24 +1,26 @@
 from io import BytesIO
+import sys
 from PIL import Image, ImageDraw
 
-MAP_PATH = 'maps/new_map.jpg'
-RED_POINT_PATH = "maps/red_point.png"
-VIEW_CON_PATH = "maps/view_con.png"
-PICTURE_ROOT = "maps/pictures"
-EM_LIST_PATH = {1: "banana.png", 2: "pineapple.png", 3: "apple.png", 4: "cherry.png", \
-                5: "beer.png", 6: "bomb.png", 7: "watergun.png", 8: "18.png", \
-                9: "mushroom.png", 10: "palm.png", 11: "burger.png", 12: "chocolate.png"}
 
 
-#coordinates of qr-codes on the map
-QR_LIST = {"1": (100, 100), "2": (100, 250), "3": (100, 400), "4": (100, 550), "5": (100, 700), "6": \
-  (350, 700), "7": (350, 550), "8": (350, 400), "9": (350, 250), "10": (350, 100), "11":(600, 100), \
-  "12": (600, 250), "13": (600, 400), "14": (600, 550), "15": (600, 700)}
+#MAP_PATH = "/content/sample_data/map_pr.jpg"
+MAP_PATH = ['/content/sample_data/1fl_light_LR.png','/content/sample_data/2fl_light_LR.png','/content/sample_data/3fl_light_LR.png']
+MAP_WITH_LINE =[ "/content/sample_data/1fl_with_line.jpg","/content/sample_data/2fl_with_line.jpg", "/content/sample_data/3fl_with_line.jpg"]
+MAP_RES_NAME = ["1fl_result.jpg", "2fl_result.jpg", "3fl_result.jpg"]
+RED_POINT_PATH = "/content/sample_data/red_point.png"
+VIEW_CON_PATH = "/content/sample_data/view_con.png"
+angle = 50
+num_shelf = 3
 
-CORNER_LIST = {1: ((180, 180), (218, 337)), 2: ((180, 339), (220, 490)), 3: ((180, 492), (219, 648)), \
-               4: ((223, 492), (262, 647)), 5: ((223, 339), (263, 490)), 6: ((223, 183), (264, 337)), \
-               7: ((440, 183), (480, 338)), 8: ((440, 341), (480, 489)), 9: ((441, 492), (479, 645)), \
-               10: ((484, 492), (524, 646)), 11: ((485, 341), (524, 489)), 12: ((484, 183), (524, 339))}
+QR_FL = {'201': 2, '202': 2, '203': 2, '204': 2, '205': 2, 
+           '206': 2, '207': 2, '301': 3, '302': 3, '303': 3,
+           '304': 3, '305': 3, '306': 3, '307': 3}
+QR_LIST = {'201': (646, 817), '202': (518, 722), '203': (455, 618), '204': (429, 511), '205': (442, 452), 
+           '206': (415, 361), '207': (718, 786), '301': (420, 349), '302': (474, 337), '303': (533, 337),
+           '304': (588, 333), '305': (415, 622), '306': (471, 660), '307': (531, 655)}
+
+route = ['201', '202', '203', '204', '205', '206', '301', '302']
 
 #draw points on the path
 #1 yes
@@ -31,63 +33,58 @@ def draw_line(point1, point2, draw) :
 
 #draw all path using path and map
 def draw_path(route, map):
-  draw = ImageDraw.Draw(map)
+  draw = []
+  for i in range(3):
+    draw.append(ImageDraw.Draw(map[i]))
   for i in range(len(route) - 1):
-    draw_line(QR_LIST[route[i]], QR_LIST[route[i+1]], draw)
+    if QR_FL[route[i]] == QR_FL[route[i+1]]:
+      draw_line(QR_LIST[route[i]], QR_LIST[route[i+1]], draw[QR_FL[route[i]]-1])
 
 #draw a rectangle using number of shelf
 def draw_rect(num, map):
   draw = ImageDraw.Draw(map)
   draw.rectangle(CORNER_LIST[num], fill = (242, 119, 119, 100))
 
-def generate_map(route, angle, shelf):
+def generate_map(route):
     #open blank map, convert to RGBA, get a size
-    map = Image.open(MAP_PATH)
-    map = map.convert("RGBA")
-    map_w, map_h = map.size
+    flag = [0, 0, 0]
+    for i in range(len(route)):
+      flag[QR_FL[route[i]] - 1] = 1
+    map_w = []
+    map_h = []
+    map = [Image.open(MAP_PATH[0]), Image.open(MAP_PATH[1]), Image.open(MAP_PATH[2])]
+    for i in range(3):
+      map[i] = map[i].convert("RGBA")
+      map_w.append(map[i].size[0])
+      map_h.append(map[i].size[1])
 
     #open picture of point, convert to RGBA, get a size
     red_point = Image.open(RED_POINT_PATH)
-    red_point = red_point.convert("RGBA")
     red_point_w, red_point_h = red_point.size
     
-    #image of view cone
-    view_con = Image.open(VIEW_CON_PATH)
-    view_con = view_con.convert("RGBA")
-    view_con_w, view_con_h = view_con.size
-
-    #angle contraclockwise from vertical
-    view_con = view_con.rotate(angle)
 
     #Layer for adding some objects with alpha chanel
-    Overlayer = Image.new("RGBA", (map_w, map_h), (0,0,0,0))
+    Overlayer = []
+    for i in range(3): 
+      Overlayer.append(Image.new("RGBA", (map_w[i], map_h[i]), (0,0,0,0))) 
     draw_path(route, map)
     if SHOW_POINTS != 0:
       for i in range(len(route)):
         offset = QR_LIST[route[i]][0] - (red_point_w // 2), QR_LIST[route[i]][1] - (red_point_h // 2)
-        Overlayer.paste(red_point,offset)
-    offset = QR_LIST[route[0]][0] - (view_con_w // 2), QR_LIST[route[0]][1] - (view_con_h // 2)
-    Overlayer.paste(view_con,offset)
-    draw_rect(shelf, Overlayer)
+        Overlayer[QR_FL[route[i]]-1].paste(red_point,offset)
+    #offset = QR_LIST[route[0]][0] - (view_con_w // 2), QR_LIST[route[0]][1] - (view_con_h // 2)
     
-    Overlayer2 = Image.new("RGBA", (map_w, map_h), (0,0,0,0))
-    for i in range(12):
-      pic = Image.open(PICTURE_ROOT + "/" + EM_LIST_PATH[i + 1])
-      pic.convert("RGBA")
-      pic_w, pic_h = pic.size
-      offset = (CORNER_LIST[i + 1][0][0] + CORNER_LIST[i + 1][1][0] - pic_w) // 2, (CORNER_LIST[i + 1][0][1] + CORNER_LIST[i + 1][1][1] - pic_h) // 2
-      Overlayer2.paste(pic, offset)
-      
-    map = Image.alpha_composite(map,Overlayer)
-    map = Image.alpha_composite(map,Overlayer2)
-
-    map = map.convert("RGB")
-
-    image_bytes = BytesIO()
-    image_bytes.name = 'result.jpeg'
-    map.save(image_bytes, format='JPEG')
-    image_bytes.seek(0)
-    return image_bytes
-
-
-
+    Background = Image.new("RGBA", (map_w[1], map_h[1]), (255,255,255,255))
+    for i in range(3):
+      map[i] = Image.alpha_composite(Background, map[i])     
+      map[i] = Image.alpha_composite(map[i],Overlayer[i])
+    
+    image_bytes = []
+    for i in range(3):
+      map[i] = map[i].convert("RGB")
+      if flag[i]:
+        image_bytes.append(BytesIO())
+        image_bytes[-1].name = MAP_RES_NAME[i]  
+        map[i].save(image_bytes, format = "JPEG")
+        image_bytes[-1].seek(0)  
+    return image_bytes    
