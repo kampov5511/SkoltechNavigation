@@ -3,13 +3,11 @@ import sys
 from PIL import Image, ImageDraw
 
 
-
 #MAP_PATH = "/content/sample_data/map_pr.jpg"
-MAP_PATH = ['/content/sample_data/1fl_light_LR.png','/content/sample_data/2fl_light_LR.png','/content/sample_data/3fl_light_LR.png']
-MAP_WITH_LINE =[ "/content/sample_data/1fl_with_line.jpg","/content/sample_data/2fl_with_line.jpg", "/content/sample_data/3fl_with_line.jpg"]
+MAP_PATH = ['map/1fl_light_LR.png','map/2fl_light_LR.png','map/3fl_light_LR.png']
 MAP_RES_NAME = ["1fl_result.jpg", "2fl_result.jpg", "3fl_result.jpg"]
-RED_POINT_PATH = "/content/sample_data/red_point.png"
-VIEW_CON_PATH = "/content/sample_data/view_con.png"
+RED_POINT_PATH = "map/red_point.png"
+VIEW_CON_PATH = "map/view_con.png"
 angle = 50
 num_shelf = 3
 
