@@ -1,31 +1,32 @@
 import os
 from io import BytesIO
+from math import atan2, pi
 
+import requests
+import telebot
 from PIL import Image
 from telebot import types
 
+from db_config import User, Feedback
 from db_config import session
 from find_route import find_route
 from generate_map import generate_map
-from db_config import User
 from pyzbar_modified import pyzbar
-import requests
-import telebot
-
-from math import atan2, pi
 
 # button name : point number
-PRODUCT_MAP = {'Bantik':1,'India':2, '\U0001F34E':3, '\U0001F352':4, '\U0001F37B':5,
-      '\U0001F4A3':6,'\U0001F52B':7, '\U0001F51E':8, '\U0001F344':9, '\U0001F334':10, '\U0001F354':11,'\U0001F36B':12}
+PRODUCT_MAP = {'Bantik': 1, 'India': 2, '\U0001F34E': 3, '\U0001F352': 4, '\U0001F37B': 5,
+               '\U0001F4A3': 6, '\U0001F52B': 7, '\U0001F51E': 8, '\U0001F344': 9, '\U0001F334': 10, '\U0001F354': 11,
+               '\U0001F36B': 12}
 # point number : qr code number
-SHELF_MAP = {1:2,2:3,3:4,4:7,5:8,6:9,7:9,8:8,9:7,10:14,11:13,12:12}
+SHELF_MAP = {1: 2, 2: 3, 3: 4, 4: 7, 5: 8, 6: 9, 7: 9, 8: 8, 9: 7, 10: 14, 11: 13, 12: 12}
 
 PRODUCT_NAMES = list(PRODUCT_MAP.keys())
+
 
 def get_angle(qrcode):
     poly = qrcode.polygon
     angle = atan2(poly[1].y - poly[0].y, poly[1].x - poly[0].x)
-    return angle - pi/2
+    return angle - pi / 2
 
 
 bot = telebot.TeleBot(os.environ.get('TELEGRAM_BOT_KEY'), parse_mode=None)
@@ -37,7 +38,7 @@ def send_destination_choices(chat_id):
     bot.send_message(chat_id=chat_id, text="Choose destination:", reply_markup=markup)
 
 
-@bot.message_handler(commands=['start', 'help'])
+@bot.message_handler(commands=['start'])
 def send_welcome(message):
     chat_id = message.chat.id
     if session.query(User.id).filter_by(id=message.from_user.id).first() is not None:
@@ -49,6 +50,29 @@ def send_welcome(message):
     send_destination_choices(chat_id)
 
 
+@bot.message_handler(commands=['help'])
+def send_help(msg):
+    chat_id = msg.chat.id
+    currently_supported_commands = '/help – show help\n' \
+                                   '/start – start\n' \
+                                   '/feedback – give us suggestions!'
+    bot.send_message(chat_id=chat_id, text=currently_supported_commands)
+
+
+@bot.message_handler(commands=['feedback'])
+def handle_feedback(msg):
+    sent = bot.send_message(chat_id=msg.chat.id, text='State your problem:')
+    bot.register_next_step_handler(sent, get_feedback)
+
+
+def get_feedback(msg):
+    user = session.query(User).get(msg.from_user.id)
+    feedback = Feedback(user_id=user.id, text=msg.text)
+    session.add(feedback)
+    session.commit()
+    bot.send_message(chat_id=msg.chat.id, text='We\'ll improve.')
+
+
 @bot.message_handler(func=lambda m: True)
 def handle_destination(msg):
     if not msg.text in PRODUCT_NAMES:
@@ -57,6 +81,7 @@ def handle_destination(msg):
     session.query(User).filter_by(chat_id=msg.chat.id).update({'destination': PRODUCT_MAP[msg.text]})
     session.commit()
     bot.send_message(chat_id=msg.chat.id, text='Scan your current location')
+
 
 @bot.message_handler(func=lambda m: True, content_types=['photo'])
 def handle_images(msg):
@@ -89,9 +114,9 @@ def get_qr(img_url, user_id, chat_id):
 
     source = int(decoded_qr_code.data)
 
-    if not source in range(1,16):
+    if not source in range(1, 16):
         bot.send_message(chat_id=chat_id, text='Wrong QR code supplied. '
-                                                       'Please make sure the code is in the image.')
+                                               'Please make sure the code is in the image.')
         return
 
     orientation_degrees = get_angle(decoded_qr_code) * 180 / pi + rotation
